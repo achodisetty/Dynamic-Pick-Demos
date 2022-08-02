@@ -4,6 +4,7 @@ import math
 import numpy as np
 
 import rtde_control
+import rtde_io
 import humatics_milo as milo
 
 import Mir_Control
@@ -47,6 +48,9 @@ gain = 100
 
 # Starting pose for the UR arm
 initial_ur_joint_pos = [-0.348, 0.125, 0.12, 3.141, 0.0, 0.0]
+
+# Initializing the IO interface
+rtde_io_ = rtde_io.RTDEIOInterface("192.168.1.199")
 
 # Initialize UR RTDE lib and moving the robot to a starting pose
 ur = rtde_control.RTDEControlInterface(ur_ip)
@@ -96,9 +100,9 @@ def point_callback(data):
         (data.position.z == 0)):
         return
 
-    transponder_quat_frame[0] = data.position.x
-    transponder_quat_frame[1] = data.position.y - 0.10
-    transponder_quat_frame[2] = data.position.z - 0.10
+    transponder_quat_frame[0] = data.position.x - 0.023
+    transponder_quat_frame[1] = data.position.y - 0.17
+    transponder_quat_frame[2] = data.position.z - 0.17
     transponder_updated = True
 
 # A method to convert the quaternion to matrix
@@ -271,18 +275,24 @@ if __name__ == '__main__':
     transponder_in_urFrame_converted[4] = cur_pos[4]
     transponder_in_urFrame_converted[5] = cur_pos[5]
     ur.moveL(transponder_in_urFrame_converted, 0.25, 0.5, True)
-    time.sleep(2)
+    time.sleep(3)
 
     '''Add action to open gripper'''
+    rtde_io_.setToolDigitalOut(0, True)
 
     # Picking the transponder
-    transponder_in_urFrame_converted[2] = transponder_in_urFrame_converted[2] - z_offset
+    transponder_in_urFrame_converted[2] = transponder_in_urFrame_converted[2] - z_offset - 0.025
     ur.moveL(transponder_in_urFrame_converted, 0.25, 0.5, True)
-    time.sleep(1)
+    time.sleep(2)
 
     '''Add action to close the gripper'''
+    rtde_io_.setToolDigitalOut(0, False)
+    time.sleep(1)
 
     # Go back to home posiiton
+    transponder_in_urFrame_converted[2] = transponder_in_urFrame_converted[2] + z_offset
+    ur.moveL(transponder_in_urFrame_converted, 0.25, 0.5, True)
+    time.sleep(1)
     ur.moveL(initial_ur_joint_pos, 0.25, 0.5, True)
     time.sleep(1)
 
@@ -299,9 +309,14 @@ if __name__ == '__main__':
     ur.moveL(drop_position_2, 0.25, 0.5, True)
     time.sleep(2)
     '''Add action open gripper'''
+    rtde_io_.setToolDigitalOut(0, True)
+
     ur.moveL(drop_position_1, 0.25, 0.5, True)
     time.sleep(2)
+
     '''Add action to close gripper'''
+    rtde_io_.setToolDigitalOut(0, False)
+
     ur.moveL(initial_ur_joint_pos, 0.25, 0.5, True)
     time.sleep(2)
 
