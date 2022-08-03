@@ -4,10 +4,11 @@ import math
 import numpy as np
 
 import rtde_control
-import rtde_io
+# import rtde_io
 import humatics_milo as milo
 
 import Mir_Control
+from gripper_cb import RobotiqGripper_CB
 
 np.set_printoptions(suppress=True)
 
@@ -50,7 +51,10 @@ gain = 100
 initial_ur_joint_pos = [-0.348, 0.125, 0.12, 3.141, 0.0, 0.0]
 
 # Initializing the IO interface
-rtde_io_ = rtde_io.RTDEIOInterface("192.168.1.199")
+# rtde_io_ = rtde_io.RTDEIOInterface("192.168.1.199")
+gripper = RobotiqGripper_CB()
+gripper.connect(ur_ip)
+gripper.activate()
 
 # Initialize UR RTDE lib and moving the robot to a starting pose
 ur = rtde_control.RTDEControlInterface(ur_ip)
@@ -278,7 +282,7 @@ if __name__ == '__main__':
     time.sleep(3)
 
     '''Add action to open gripper'''
-    rtde_io_.setToolDigitalOut(0, True)
+    gripper.open()
 
     # Picking the transponder
     transponder_in_urFrame_converted[2] = transponder_in_urFrame_converted[2] - z_offset - 0.025
@@ -286,7 +290,7 @@ if __name__ == '__main__':
     time.sleep(2)
 
     '''Add action to close the gripper'''
-    rtde_io_.setToolDigitalOut(0, False)
+    gripper.close()
     time.sleep(1)
 
     # Go back to home posiiton
@@ -309,13 +313,13 @@ if __name__ == '__main__':
     ur.moveL(drop_position_2, 0.25, 0.5, True)
     time.sleep(2)
     '''Add action open gripper'''
-    rtde_io_.setToolDigitalOut(0, True)
+    gripper.open()
 
     ur.moveL(drop_position_1, 0.25, 0.5, True)
     time.sleep(2)
 
     '''Add action to close gripper'''
-    rtde_io_.setToolDigitalOut(0, False)
+    gripper.close()
 
     ur.moveL(initial_ur_joint_pos, 0.25, 0.5, True)
     time.sleep(2)
